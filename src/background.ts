@@ -17,6 +17,7 @@ type FetchHistoryType = {
 };
 
 let fetchHistory: FetchHistoryType = {};
+const baseURL = "https://gluon.proton.ai";
 
 async function getCurrentTab() {
   let queryOptions = { active: true, lastFocusedWindow: true };
@@ -59,11 +60,12 @@ chrome.webRequest.onBeforeRequest.addListener(
       const { origin, pathname, searchParams } = new URL(
         details.url.toString()
       );
-      if (origin !== "https://gluon.proton.ai") return;
+      if (origin !== baseURL) return;
       const tab = await getCurrentTab();
       const referer = tab.url;
       const endpoint = pathname.split("/").reverse()[0];
       const { url, requestId, method, timeStamp, tabId } = details;
+      const isTrack = endpoint === "track" || endpoint === "login";
       let payload;
       if (details.requestBody) {
         const buffer = details!.requestBody!.raw![0].bytes;
@@ -80,25 +82,20 @@ chrome.webRequest.onBeforeRequest.addListener(
         timeStamp,
         url,
         referer,
-        type:
-          endpoint === "track" || endpoint === "login"
-            ? "track"
-            : "recommendation",
-        model:
-          endpoint === "track"
-            ? null
-            : endpoint === "recommendation"
-            ? "general"
-            : endpoint,
-        payload:
-          endpoint === "track"
-            ? payload
-            : {
-                customer_id: searchParams.get("customer_id"),
-                product_id: searchParams.get("product_id"),
-                user_id: searchParams.get("user_id"),
-                count: searchParams.get("count"),
-              },
+        type: isTrack ? "track" : "recommendation",
+        model: isTrack
+          ? null
+          : endpoint === "recommendations"
+          ? "general"
+          : endpoint,
+        payload: isTrack
+          ? payload
+          : {
+              customer_id: searchParams.get("customer_id"),
+              product_id: searchParams.get("product_id"),
+              user_id: searchParams.get("user_id"),
+              count: searchParams.get("count"),
+            },
       };
       chrome.runtime.sendMessage({
         event: "history-updated",
@@ -113,7 +110,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 chrome.webRequest.onCompleted.addListener(
   function (details) {
     const { origin } = new URL(details.url.toString());
-    if (origin !== "https://gluon.proton.ai") return;
+    if (origin !== baseURL) return;
     const { requestId, statusCode, tabId, statusLine } = details;
     const status = statusCode < 300 ? "success" : "fail";
     fetchHistory[tabId][requestId].status = status;
