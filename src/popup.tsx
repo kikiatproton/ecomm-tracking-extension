@@ -58,7 +58,6 @@ const Popup = () => {
             statusLine,
             referer,
           } = history[requestId];
-          const event = payload?.event;
           const statusColor =
             status === "pending"
               ? "var(--yellow-color)"
@@ -99,7 +98,6 @@ const Popup = () => {
                   <div>{type}</div>
                   <div style={{ marginLeft: "12px" }}>
                     {model && <span>{model}</span>}
-                    {event && <span>{event}</span>}
                   </div>
                 </div>
                 <ReactJson

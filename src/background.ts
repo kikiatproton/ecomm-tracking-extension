@@ -65,7 +65,8 @@ chrome.webRequest.onBeforeRequest.addListener(
       const referer = tab.url;
       const endpoint = pathname.split("/").reverse()[0];
       const { url, requestId, method, timeStamp, tabId } = details;
-      const isTrack = endpoint === "track" || endpoint === "login";
+      const isLogin = endpoint === "login";
+      const isTrack = endpoint === "track" || isLogin;
       let payload;
       if (details.requestBody) {
         const buffer = details!.requestBody!.raw![0].bytes;
@@ -83,8 +84,10 @@ chrome.webRequest.onBeforeRequest.addListener(
         url,
         referer,
         type: isTrack ? "track" : "recommendation",
-        model: isTrack
-          ? null
+        model: isLogin
+          ? "login"
+          : isTrack
+          ? payload.event
           : endpoint === "recommendations"
           ? "general"
           : endpoint,
