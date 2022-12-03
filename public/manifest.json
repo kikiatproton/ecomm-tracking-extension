@@ -32,6 +32,6 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "permissions": ["tabs", "storage", "webRequest"],
+  "permissions": ["tabs",  "webRequest"],
   "host_permissions": ["<all_urls>"]
 }
